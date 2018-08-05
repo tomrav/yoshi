@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import path from 'path';
 import 'regenerator-runtime/runtime';
 import ejs from 'ejs';
@@ -11,8 +10,6 @@ const artifactId = `com.wixpress.${artifactName}`;
 
 module.exports = (app, context) => {
   const config = context.config.load(artifactName);
-  const templatePath = './src/index.ejs';
-  const templateFile = readFileSync(templatePath, 'utf8');
   const isProduction = wixRunMode.isProduction();
 
   app.use(wixExpressCsrf());
