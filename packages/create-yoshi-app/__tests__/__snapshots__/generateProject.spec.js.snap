@@ -3194,10 +3194,19 @@ const bootstrap = require('wix-bootstrap-ng');
 
 const rootDir = process.env.SRC_PATH || './dist/src';
 const getPath = filename => path.join(rootDir, filename);
+const hadronOpts = {
+  staticArtifacts: [
+    {
+      artifactId: 'com.wixpress.test-fullstack-typescript',
+    },
+  ],
+};
 
 bootstrap()
+  .use(require('wix-bootstrap-greynode'))
+  .use(require('wix-bootstrap-hadron'), hadronOpts)
   .express(getPath('server'))
-  .start({disableCluster: process.env.NODE_ENV === 'development'});
+  .start({ disableCluster: process.env.NODE_ENV === 'development' });
 ",
   "package.json": "{
   \\"name\\": \\"test-fullstack-typescript\\",
@@ -3227,6 +3236,8 @@ bootstrap()
     \\"react-dom\\": \\"15.6.1\\",
     \\"react-i18next\\": \\"~4.6.0\\",
     \\"wix-axios-config\\": \\"latest\\",
+    \\"wix-bootstrap-greynode\\": \\"latest\\",
+    \\"wix-bootstrap-hadron\\": \\"latest\\",
     \\"wix-bootstrap-ng\\": \\"latest\\",
     \\"wix-express-csrf\\": \\"latest\\",
     \\"wix-express-require-https\\": \\"latest\\",
@@ -3492,39 +3503,43 @@ export default function i18n({ locale = 'en', baseUrl = '' } = {}) {
   </body>
 </html>
 ",
-  "src/server.ts": "import { Router } from 'express';
-import * as wixRunMode from 'wix-run-mode';
+  "src/server.ts": "import * as path from 'path';
+import { Router } from 'express';
 import * as ejs from 'ejs';
+import * as wixRunMode from 'wix-run-mode';
 import * as wixExpressCsrf from 'wix-express-csrf';
 import * as wixExpressRequireHttps from 'wix-express-require-https';
-import { readFileSync } from 'fs';
+
+const artifactName = 'test-fullstack-typescript';
+const artifactId = \`com.wixpress.\${artifactName}\`;
 
 module.exports = (app: Router, context) => {
-  const config = context.config.load('test-fullstack-typescript');
-  const templatePath = './src/index.ejs';
-  const templateFile = readFileSync(templatePath, 'utf8');
+  const config = context.config.load(artifactName);
   const isProduction = wixRunMode.isProduction();
 
   app.use(wixExpressCsrf());
   app.use(wixExpressRequireHttps);
 
-  app.get('/', (req, res) => {
-    const renderModel = getRenderModel(req);
-    const html = ejs.render(templateFile, renderModel, {
-      cache: isProduction,
-      filename: templatePath,
+  app.get('/', context.hadron.middleware(), (req, res, next) => {
+    const hadron = res.locals.hadron;
+    const renderModel = getRenderModel(req, hadron);
+    const templatePath = path.join(hadron.staticLocalPath(artifactId, './src'), 'index.ejs');
+    ejs.renderFile(templatePath, renderModel, { cache: isProduction }, (err, html) => {
+      err ? next(err) : res.send(html);
     });
-    res.send(html);
   });
 
-  function getRenderModel(req) {
+  function getRenderModel(req, hadron) {
     return {
       locale: req.aspects['web-context'].language,
       basename: req.aspects['web-context'].basename,
       debug:
         req.aspects['web-context'].debug ||
         process.env.NODE_ENV === 'development',
-      clientTopology: config.clientTopology,
+      clientTopology: {
+        ...config.clientTopology,
+        staticsBaseUrl: hadron.staticUrl(artifactId, config.clientTopology.staticsBaseUrl)
+      },
       title: 'Wix Full Stack Project Boilerplate',
     };
   }

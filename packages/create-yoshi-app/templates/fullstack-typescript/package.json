@@ -26,6 +26,8 @@
     "react-dom": "15.6.1",
     "react-i18next": "~4.6.0",
     "wix-axios-config": "latest",
+    "wix-bootstrap-greynode": "latest",
+    "wix-bootstrap-hadron": "latest",
     "wix-bootstrap-ng": "latest",
     "wix-express-csrf": "latest",
     "wix-express-require-https": "latest",
