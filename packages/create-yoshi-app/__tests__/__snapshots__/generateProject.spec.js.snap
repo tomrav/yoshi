@@ -2666,9 +2666,11 @@ const bootstrap = require('wix-bootstrap-ng');
 const rootDir = process.env.SRC_PATH || './dist/src';
 const getPath = filename => path.join(rootDir, filename);
 const hadronOpts = {
-  staticArtifacts: [{
-    artifactId: 'com.wixpress.test-fullstack'
-  }]
+  staticArtifacts: [
+    {
+      artifactId: 'com.wixpress.test-fullstack',
+    },
+  ],
 };
 
 bootstrap()
@@ -2706,6 +2708,8 @@ bootstrap()
     \\"react-i18next\\": \\"~4.6.0\\",
     \\"regenerator-runtime\\": \\"^0.11.0\\",
     \\"wix-axios-config\\": \\"latest\\",
+    \\"wix-bootstrap-greynode\\": \\"latest\\",
+    \\"wix-bootstrap-hadron\\": \\"latest\\",
     \\"wix-bootstrap-ng\\": \\"latest\\",
     \\"wix-express-csrf\\": \\"latest\\",
     \\"wix-express-require-https\\": \\"latest\\",
