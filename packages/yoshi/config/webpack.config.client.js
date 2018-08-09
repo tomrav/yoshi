@@ -7,7 +7,7 @@ const DuplicatePackageCheckerPlugin = require('duplicate-package-checker-webpack
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const { isObject } = require('lodash');
 const { staticsDomain } = require('../src/constants');
-const StylableWebpackPlugin = require('stylable-webpack-plugin');
+const StylableWebpackPlugin = require('@stylable/webpack-plugin');
 const DynamicPublicPath = require('../src/webpack-plugins/dynamic-public-path');
 const {
   mergeByConcat,
