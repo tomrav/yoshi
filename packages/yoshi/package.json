@@ -15,6 +15,7 @@
     "customPublish": "node ../../scripts/customPublish.js"
   },
   "dependencies": {
+    "@stylable/cli": "^1.0.7",
     "@stylable/core": "^0.1.7",
     "@stylable/node": "^0.1.8",
     "@stylable/webpack-plugin": "^0.1.7",
