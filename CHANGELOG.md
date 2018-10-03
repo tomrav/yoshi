@@ -1,5 +1,181 @@
 # Changelog
 
+## 3.13.1 (2018-10-02)
+
+#### :bug: Bug Fix
+* `yoshi-helpers`, `yoshi`
+  * [#602](https://github.com/wix/yoshi/pull/602) Create webpack's public path only in case there is a `pom.xml` file ([@ranyitz](https://github.com/ranyitz))
+
+#### :nail_care: Polish
+* [#601](https://github.com/wix/yoshi/pull/601) Fix broken link to bundle analysis guide ([@ronenst](https://github.com/ronenst))
+* [#603](https://github.com/wix/yoshi/pull/603) Fix broken link to images on `debugging.md` ([@sidoruk-sv](https://github.com/sidoruk-sv))
+
+## 3.13.0 (2018-10-02)
+
+#### :rocket: New Feature
+* `yoshi`
+  * [#582](https://github.com/wix/yoshi/pull/582) Process `unprocessedModules` with graphql loader ([@eddierl](https://github.com/eddierl))
+* `yoshi-config`, `yoshi`
+  * [#591](https://github.com/wix/yoshi/pull/591) Add `--stats` flag to generate `dist/webpack-stats.json` ([@ronenst](https://github.com/ronenst))
+
+#### :bug: Bug Fix
+* `create-yoshi-app`
+  * [#597](https://github.com/wix/yoshi/pull/597) Add dynamic `%organization%`  into some of `pom.xml` templates ([@sidoruk-sv](https://github.com/sidoruk-sv))
+
+## 3.12.0 (2018-10-02)
+
+#### :rocket: New Feature
+* [#594](https://github.com/wix/yoshi/pull/594) Integrate algolia search ([@ranyitz](https://github.com/ranyitz))
+* [#590](https://github.com/wix/yoshi/pull/590) Initial documentation site ([@ranyitz](https://github.com/ranyitz))
+
+#### :bug: Bug Fix
+* `yoshi-config`, `yoshi`
+  * [#593](https://github.com/wix/yoshi/pull/593) Fix webpack's public path for local development ([@ranyitz](https://github.com/ranyitz))
+* `create-yoshi-app`
+  * [#596](https://github.com/wix/yoshi/pull/596) Add @types/node version 8 as version 10 clashes with typescript ([@ranyitz](https://github.com/ranyitz))
+* `yoshi-config`, `yoshi-helpers`, `yoshi`
+  * [#592](https://github.com/wix/yoshi/pull/592) Change `xml2js` with `xmldoc` and compute artifact id from `pom.xml` ([@ranyitz](https://github.com/ranyitz))
+* `babel-preset-yoshi`
+  * [#585](https://github.com/wix/yoshi/pull/585) Do not transpile dynamic imports only when used in webpack ([@ranyitz](https://github.com/ranyitz))
+
+#### :nail_care: Polish
+* `yoshi`
+  * [#588](https://github.com/wix/yoshi/pull/588) Prefer local yoshi installation when using CLI ([@yanivefraim](https://github.com/yanivefraim))
+* `yoshi-helpers`, `yoshi`
+  * [#584](https://github.com/wix/yoshi/pull/584) Show a warning when the user tries to run e2e tests but there is no bundle built ([@ranyitz](https://github.com/ranyitz))
+* `yoshi-helpers`
+  * [#579](https://github.com/wix/yoshi/pull/579) Upgrade "typescript" peer dependency version to also accept 3^ ([@nktssh](https://github.com/nktssh))
+
+#### :house: Internal
+* `yoshi-config`, `yoshi-helpers`, `yoshi`
+  * [#589](https://github.com/wix/yoshi/pull/589) Refactor webpack config to a single file ([@ronami](https://github.com/ronami))
+
+## 3.11.0 (2018-09-16)
+
+#### :rocket: New Feature
+* `create-yoshi-app`
+  * [#540](https://github.com/wix/yoshi/pull/540) Generate a git repo if needed ([@netanelgilad](https://github.com/netanelgilad))
+  * [#537](https://github.com/wix/yoshi/pull/537) Node version verification ([@yairhaimo](https://github.com/yairhaimo))
+
+#### :bug: Bug Fix
+* `yoshi-helpers`, `yoshi`
+  * [#565](https://github.com/wix/yoshi/pull/565) Generate stats file using BundleAnalyzerPlugin instead of manually ([@netanelgilad](https://github.com/netanelgilad))
+* `yoshi`
+  * [#566](https://github.com/wix/yoshi/pull/566) Don't show Webpack performance hints by default ([@netanelgilad](https://github.com/netanelgilad))
+
+#### :nail_care: Polish
+* `tslint-config-yoshi-base`
+  * [#569](https://github.com/wix/yoshi/pull/569) Remove `no-unused-variables` & `strict-type-predicates` tslint rules ([@yairhaimo](https://github.com/yairhaimo))
+
+## 3.10.1 (2018-09-05)
+
+#### :bug: Bug Fix
+* `yoshi-helpers`
+  * [#564](https://github.com/wix/yoshi/pull/564) Add direct dependency on lodash ([@ronami](https://github.com/ronami))
+
+## 3.10.0 (2018-09-05)
+
+#### :rocket: New Feature
+* `create-yoshi-app`
+  * [#561](https://github.com/wix/yoshi/pull/561) Simplify local (fake) server for client projects ([@ronami](https://github.com/ronami))
+
+#### :house: Internal
+* `eslint-config-yoshi-base`, `jest-environment-yoshi-bootstrap`, `jest-environment-yoshi-puppeteer`, `tslint-config-yoshi-base`, `yoshi-config`, `yoshi-helpers`, `yoshi`
+  * [#558](https://github.com/wix/yoshi/pull/558) create new packages `yoshi-config` and `yoshi-helpers` ([@ranyitz](https://github.com/ranyitz))
+
+## 3.9.1 (2018-09-04)
+
+#### :bug: Bug Fix
+* `create-yoshi-app`, `yoshi`
+  * [#560](https://github.com/wix/yoshi/pull/560) add `universalProject` to configuration schema ([@netanelgilad](https://github.com/netanelgilad))
+
+## 3.9.0 (2018-09-02)
+
+#### :rocket: New Feature
+* `create-yoshi-app`
+  * [#549](https://github.com/wix/yoshi/pull/549) Simplify server code and add basic annotations to it ([@ronami](https://github.com/ronami))
+  * [#556](https://github.com/wix/yoshi/pull/556) Drop explicit Response type in fullstack/TypeScript ([@roymiloh](https://github.com/roymiloh))
+  * [#554](https://github.com/wix/yoshi/pull/554) Add `wix-bootstrap-renderer` to fullstack projects ([@roymiloh](https://github.com/roymiloh))
+  * [#542](https://github.com/wix/yoshi/pull/542) Simplify i18n setup to use webpack's dynamic imports ([@ronami](https://github.com/ronami))
+* `yoshi`
+  * [#552](https://github.com/wix/yoshi/pull/552) Cleanup output of build command ([@netanelgilad](https://github.com/netanelgilad))
+  * [#555](https://github.com/wix/yoshi/pull/555) Add lerna-changelog for autogeneration of changelog based on PRs from last tag ([@ranyitz](https://github.com/ranyitz))
+
+#### :bug: Bug Fix
+* `yoshi`
+  * [#550](https://github.com/wix/yoshi/pull/550) Lock wallaby's babel version ([@amitdahan](https://github.com/amitdahan))
+* `create-yoshi-app`
+  * [#548](https://github.com/wix/yoshi/pull/548) Use template var instead of `package.json` to prevent Lerna from analyzing them ([@ronami](https://github.com/ronami))
+
+## 3.8.1 (Aug 29, 2018)
+#### :nail_care: Enhancement
+* `yoshi`
+  * [#535](https://github.com/wix/yoshi/pull/535) Validate that Yoshi's config is correct before running a command
+
+#### :bug: Bug
+* `create-yoshi-app`
+  * [#545](https://github.com/wix/yoshi/pull/545) Use files from /src only during test
+
+## 3.8.0 (Aug 27, 2018)
+#### :nail_care: Enhancement
+* `create-yoshi-app`
+  * [#533](https://github.com/wix/yoshi/pull/533) Update typescript generator templates to use version `3.0.1`
+  * [#505](https://github.com/wix/yoshi/pull/505) Move client/fullstack generators to use `jest-yoshi-preset`
+
+## 3.7.0 (Aug 23, 2018)
+#### :bug: Bug
+* `create-yoshi-app`
+  * [#511](https://github.com/wix/yoshi/pull/511) Support generating a project in a directory with initialized git repository
+  * [#522](https://github.com/wix/yoshi/pull/522) Add `lint-staged` to project templates
+* `yoshi`
+  * [#522](https://github.com/wix/yoshi/pull/522) Ensure `shouldRunStylelint` before linting specific style files
+
+#### :nail_care: Enhancement
+* `yoshi`
+  * [#519](https://github.com/wix/yoshi/pull/519) Remove depCheck from start command
+  * [#520](https://github.com/wix/yoshi/pull/520) Add enhanced tpa style webpack plugin
+
+#### :house: Internal
+* [#517](https://github.com/wix/yoshi/pull/517) Link local packages when running create-yoshi-app e2es
+
+## 3.6.1 (Aug 21, 2018)
+#### :bug: Bug
+* `create-yoshi-app`
+  * [#508](https://github.com/wix/yoshi/pull/508) Fix a bug with generating projects
+
+## 3.6.0 (Aug 21, 2018)
+
+#### :bug: Bug
+* `yoshi`
+  * [#503](https://github.com/wix/yoshi/pull/503) Allow Wallaby to import json from tests directory as well
+
+#### :nail_care: Enhancement
+* `jest-yoshi-preset`
+  * [#501](https://github.com/wix/yoshi/pull/501) [#504](https://github.com/wix/yoshi/pull/504) Various fixes and improvements
+* `yoshi`
+  * [#502](https://github.com/wix/yoshi/pull/502) Add an option to connfigure Webpack with `umdNamedDefine`
+
+#### :house: Internal
+* `yoshi`
+  * [#475](https://github.com/wix/yoshi/pull/475) Move depkeeper configuration to `depkeeper-preset-yoshi`
+* `create-yoshi-app`
+  * [#499](https://github.com/wix/yoshi/pull/499) Add a dev command that enables fun and fast development for the templates of `create-yoshi-app`
+
+## 3.5.0 (Aug 14, 2018)
+
+#### :nail_care: Enhancement
+* `jest-yoshi-preset`
+  * [#495](https://github.com/wix/yoshi/pull/495) Initial version of `jest-yoshi-preset`
+
+## 3.4.4 (Aug 14, 2018)
+
+#### :bug: Bug
+* `create-yoshi-app`
+  * [#490](https://github.com/wix/yoshi/pull/490) Fix default global git user config
+* `yoshi`
+  * [#496](https://github.com/wix/yoshi/pull/496) Added support for two CLI options when using Jest: runInBand and forceExit
+  * [#497](https://github.com/wix/yoshi/pull/497) Add a unique `jsonpFunction` for each project according to project name
+
 ## 3.4.3 (Aug 7, 2018)
 
 #### :bug: Bug

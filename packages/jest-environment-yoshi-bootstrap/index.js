@@ -1,50 +1,42 @@
-const path = require('path');
-const testkit = require('wix-bootstrap-testkit');
-const configEmitter = require('wix-config-emitter');
-const rpcTestkit = require('wix-rpc-testkit');
 const NodeEnvironment = require('jest-environment-node');
-const {
-  PORT,
-  MANAGEMENT_PORT,
-  RPC_PORT,
-  APP_CONF_DIR,
-} = require('./constants');
+const { getPort, appConfDir } = require('./constants');
+const projectConfig = require('yoshi-config');
+const { setupRequireHooks } = require('yoshi-helpers');
 
-const config = require(path.join(process.cwd(), 'jest-yoshi.config.js'));
+// the user's config is loaded outside of a jest runtime and should be transpiled
+// with babel/typescript, this may be run separately for every worker
+setupRequireHooks();
+
+const jestYoshiConfig = require('yoshi-config/jest');
 
 module.exports = class BootstrapEnvironment extends NodeEnvironment {
   async setup() {
     await super.setup();
 
-    const emitter = configEmitter({
-      sourceFolders: ['./templates'],
-      targetFolder: APP_CONF_DIR,
-    });
-
-    this.global.rpcServer = rpcTestkit.server({
-      port: RPC_PORT,
-    });
-
-    this.global.app = testkit.app('./index', {
-      env: {
-        PORT,
-        APP_CONF_DIR,
-        MANAGEMENT_PORT,
-        NEW_RELIC_LOG_LEVEL: 'warn',
-        DEBUG: '',
-      },
-    });
-
-    await config.bootstrap.emit(emitter, { rpcServer: this.global.rpcServer });
-
-    await this.global.rpcServer.start();
-    await this.global.app.start();
+    // errors from environment setup/teardown are catched silently
+    try {
+      await jestYoshiConfig.bootstrap.setup({
+        globalObject: this.global,
+        getPort,
+        staticsUrl: projectConfig.servers.cdn.url,
+        appConfDir,
+      });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 
   async teardown() {
     await super.teardown();
 
-    await this.global.app.stop();
-    await this.global.rpcServer.stop();
+    try {
+      await jestYoshiConfig.bootstrap.teardown({
+        globalObject: this.global,
+      });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 };

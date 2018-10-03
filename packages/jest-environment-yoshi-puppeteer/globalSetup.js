@@ -10,9 +10,16 @@ const chalk = require('chalk');
 const puppeteer = require('puppeteer');
 const child_process = require('child_process');
 const waitPort = require('wait-port');
+const { servers } = require('yoshi-config');
 const { WS_ENDPOINT_PATH } = require('./constants');
-const { getProcessForPort, loadConfig } = require('./utils');
-const { servers } = require('yoshi/config/project');
+const { getProcessForPort, shouldRunE2Es } = require('./utils');
+const { setupRequireHooks } = require('yoshi-helpers');
+
+// the user's config is loaded outside of a jest runtime and should be transpiled
+// with babel/typescript, this may be run separately for every worker
+setupRequireHooks();
+
+const jestYoshiConfig = require('yoshi-config/jest');
 
 const serverLogPrefixer = () => {
   return new stream.Transform({
@@ -23,81 +30,89 @@ const serverLogPrefixer = () => {
   });
 };
 
-const config = loadConfig();
-
 module.exports = async () => {
-  // start with a few new lines
-  console.log('\n\n');
+  // a bit hacky, run puppeteer setup only if it's required
+  if (await shouldRunE2Es()) {
+    // start with a few new lines
+    console.log('\n\n');
 
-  global.BROWSER = await puppeteer.launch({
-    // defaults
-    headless: true,
-    args: ['--no-sandbox'],
+    global.BROWSER = await puppeteer.launch({
+      // defaults
+      headless: true,
+      args: ['--no-sandbox'],
 
-    // user defined options
-    ...config.puppeteer,
-  });
+      // user defined options
+      ...jestYoshiConfig.puppeteer,
+    });
 
-  const webpackDevServerProcessCwd = getProcessForPort(servers.cdn.port());
+    await fs.outputFile(WS_ENDPOINT_PATH, global.BROWSER.wsEndpoint());
 
-  if (!webpackDevServerProcessCwd) {
-    throw new Error(
-      `Could not find webpack dev server running on port ${servers.cdn.port()}, please run 'npm start'.`,
-    );
-  }
+    const webpackDevServerProcessCwd = getProcessForPort(servers.cdn.port);
 
-  if (webpackDevServerProcessCwd.directory !== process.cwd()) {
-    throw new Error(
-      `A different process (${
-        webpackDevServerProcessCwd.directory
-      }) is already running on port '${servers.cdn.port()}', aborting.`,
-    );
-  }
-
-  if (config.server) {
-    const serverProcessCwd = getProcessForPort(config.server.port);
-
-    if (serverProcessCwd) {
+    if (!webpackDevServerProcessCwd) {
       throw new Error(
-        `A different process (${
-          serverProcessCwd.directory
-        }) is already running on port ${config.server.port}, aborting.`,
+        `Running E2E tests requires a server to serve static files. Could not find any dev server on port ${chalk.cyan(
+          servers.cdn.port,
+        )}. Please run 'npm start' from a different terminal window.`,
       );
     }
 
-    global.SERVER = child_process.spawn('node', [config.server.filename], {
-      stdio: 'pipe',
-      env: {
-        ...process.env,
-        PORT: config.server.port,
-      },
-    });
-
-    global.SERVER.stdout.pipe(serverLogPrefixer()).pipe(process.stdout);
-    global.SERVER.stderr.pipe(serverLogPrefixer()).pipe(process.stderr);
-
-    if (config.server.port) {
-      const timeout = 5000;
-
-      const portFound = await waitPort({
-        port: config.server.port,
-        output: 'silent',
-        timeout,
-      });
-
-      if (!portFound) {
-        throw new Error(
-          `Tried running '${
-            config.server.filename
-          }' but couldn't find a server on port '${
-            config.server.port
-          }' after ${timeout} miliseconds.`,
-        );
-      }
+    if (webpackDevServerProcessCwd.directory !== process.cwd()) {
+      throw new Error(
+        `A different process (${chalk.cyan(
+          webpackDevServerProcessCwd.directory,
+        )}) is already running on port '${chalk.cyan(
+          servers.cdn.port,
+        )}', aborting.`,
+      );
     }
 
-    console.log('\n');
-  }
+    if (jestYoshiConfig.server) {
+      const serverProcessCwd = getProcessForPort(jestYoshiConfig.server.port);
 
-  await fs.outputFile(WS_ENDPOINT_PATH, global.BROWSER.wsEndpoint());
+      if (serverProcessCwd) {
+        throw new Error(
+          `A different process (${chalk.cyan(
+            serverProcessCwd.directory,
+          )}) is already running on port ${chalk.cyan(
+            jestYoshiConfig.server.port,
+          )}, aborting.`,
+        );
+      }
+
+      global.SERVER = child_process.spawn(jestYoshiConfig.server.command, {
+        shell: true,
+        stdio: 'pipe',
+        env: {
+          ...process.env,
+          PORT: jestYoshiConfig.server.port,
+        },
+      });
+
+      global.SERVER.stdout.pipe(serverLogPrefixer()).pipe(process.stdout);
+      global.SERVER.stderr.pipe(serverLogPrefixer()).pipe(process.stderr);
+
+      if (jestYoshiConfig.server.port) {
+        const timeout = 5000;
+
+        const portFound = await waitPort({
+          port: jestYoshiConfig.server.port,
+          output: 'silent',
+          timeout,
+        });
+
+        if (!portFound) {
+          throw new Error(
+            `Tried running '${chalk.cyan(
+              jestYoshiConfig.server.filename,
+            )}' but couldn't find a server on port '${chalk.cyan(
+              jestYoshiConfig.server.port,
+            )}' after ${chalk.cyan(timeout)} miliseconds.`,
+          );
+        }
+      }
+
+      console.log('\n');
+    }
+  }
 };

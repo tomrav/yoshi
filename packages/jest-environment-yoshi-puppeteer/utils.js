@@ -1,13 +1,12 @@
-const path = require('path');
-const fs = require('fs-extra');
 const { execSync } = require('child_process');
+const globby = require('globby');
 
 const execOptions = {
   encoding: 'utf8',
   stdio: [
     'pipe', // stdin (default)
     'pipe', // stdout (default)
-    'ignore', //stderr
+    'ignore', // stderr
   ],
 };
 
@@ -37,16 +36,13 @@ module.exports.getProcessForPort = port => {
   }
 };
 
-module.exports.loadConfig = () => {
-  const configPath = path.join(process.cwd(), 'jest-yoshi.config.js');
+const { MATCH_ENV } = process.env;
 
-  if (!fs.existsSync(configPath)) {
-    throw new Error(
-      `Could't find config file at: '${configPath}', please create one.`,
-    );
-  }
+module.exports.shouldRunE2Es = async () => {
+  const filesPaths = await globby('test/e2e/**/*.spec.(ts|js){,x}');
 
-  const config = require(configPath);
-
-  return config;
+  return (
+    filesPaths.length > 0 &&
+    (!MATCH_ENV || MATCH_ENV.split(',').includes('e2e'))
+  );
 };

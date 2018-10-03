@@ -1,9 +1,19 @@
 const fs = require('fs-extra');
 const puppeteer = require('puppeteer');
-const NodeEnvironment = require('jest-environment-node');
 const { WS_ENDPOINT_PATH } = require('./constants');
+const { setupRequireHooks } = require('yoshi-helpers');
 
-module.exports = class PuppeteerEnvironment extends NodeEnvironment {
+// the user's config is loaded outside of a jest runtime and should be transpiled
+// with babel/typescript, this may be run separately for every worker
+setupRequireHooks();
+
+const jestYoshiConfig = require('yoshi-config/jest');
+
+const ParentEnvironment = jestYoshiConfig.bootstrap
+  ? require('jest-environment-yoshi-bootstrap')
+  : require('jest-environment-node');
+
+module.exports = class PuppeteerEnvironment extends ParentEnvironment {
   async setup() {
     await super.setup();
 
@@ -18,6 +28,10 @@ module.exports = class PuppeteerEnvironment extends NodeEnvironment {
     });
 
     this.global.page = await this.global.browser.newPage();
+
+    this.global.page.on('pageerror', error => {
+      throw error;
+    });
   }
 
   async teardown() {

@@ -2,43 +2,50 @@ const path = require('path');
 const fs = require('fs');
 const glob = require('glob');
 const StylableWebpackPlugin = require('@stylable/webpack-plugin');
-const webpackConfigCommon = require('./webpack.config.common');
-const mergeByConcat = require('../src/utils').mergeByConcat;
-const { cssModules, tpaStyle } = require('./project');
-const globs = require('../src/globs');
-const projectConfig = require('./project');
+const {
+  createCommonWebpackConfig,
+  getStyleLoaders,
+} = require('./webpack.config');
+const globs = require('yoshi-config/globs');
+const projectConfig = require('yoshi-config');
 
-const specsGlob = projectConfig.specs.browser() || globs.specs();
+const specsGlob = projectConfig.specs.browser || globs.specs;
 const karmaSetupPath = path.join(process.cwd(), 'test', `karma-setup.js`);
 
-let entry = glob.sync(specsGlob).map(p => path.resolve(p));
+const entry = glob.sync(specsGlob).map(p => path.resolve(p));
 
 if (fs.existsSync(karmaSetupPath)) {
   entry.unshift(karmaSetupPath);
 }
 
-module.exports = mergeByConcat(webpackConfigCommon, {
+const config = createCommonWebpackConfig({ isDebug: true });
+
+const styleLoaders = getStyleLoaders({
+  embedCss: false,
+  isDebug: true,
+  separateCss: false,
+});
+
+module.exports = {
+  ...config,
+
   entry,
-  mode: 'development',
+
   output: {
+    ...config.output,
     path: path.resolve('dist'),
     filename: 'specs.bundle.js',
   },
+
   module: {
-    rules: [
-      require('../src/loaders/sass')({
-        separateCss: false,
-        cssModules: cssModules(),
-        tpaStyle: tpaStyle(),
-      }).specs,
-      require('../src/loaders/less')({
-        separateCss: false,
-        cssModules: cssModules(),
-        tpaStyle: tpaStyle(),
-      }).specs,
-    ],
+    ...config.module,
+
+    rules: [...config.module.rules, ...styleLoaders],
   },
+
   plugins: [
+    ...config.plugins,
+
     new StylableWebpackPlugin({
       outputCSS: false,
       filename: '[name].stylable.bundle.css',
@@ -46,10 +53,13 @@ module.exports = mergeByConcat(webpackConfigCommon, {
       optimize: { classNameOptimizations: false },
     }),
   ],
+
   externals: {
+    ...config.externals,
+
     cheerio: 'window',
     'react/addons': true,
     'react/lib/ExecutionEnvironment': true,
     'react/lib/ReactContext': true,
   },
-});
+};

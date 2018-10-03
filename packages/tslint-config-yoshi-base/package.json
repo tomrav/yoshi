@@ -1,6 +1,6 @@
 {
   "name": "tslint-config-yoshi-base",
-  "version": "3.1.2",
+  "version": "3.12.0",
   "description": "tslint configuration for projects using yoshi",
   "main": "index.js",
   "keywords": [
@@ -29,8 +29,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^5.2.0",
+    "mocha-env-reporter": "^3.0.0",
     "tslint": "^5.10.0",
     "typescript": "^2.9.2"
   }

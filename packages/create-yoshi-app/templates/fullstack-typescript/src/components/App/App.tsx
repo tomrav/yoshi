@@ -5,13 +5,14 @@ import * as PropTypes from 'prop-types';
 
 interface AppProps extends InjectedTranslateProps {}
 
-class App extends React.Component<AppProps, null> {
+class App extends React.Component<AppProps, {}> {
   static propTypes = {
     t: PropTypes.func,
   };
 
   render() {
     const { t } = this.props;
+
     return (
       <div className={s.root}>
         <div className={s.header}>
@@ -23,4 +24,4 @@ class App extends React.Component<AppProps, null> {
   }
 }
 
-export default translate(null, { wait: true })(App);
+export default translate()(App);

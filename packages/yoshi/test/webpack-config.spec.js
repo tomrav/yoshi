@@ -1,15 +1,19 @@
 const { expect } = require('chai');
 const retryPromise = require('retry-promise').default;
 const fetch = require('node-fetch');
-const { killSpawnProcessAndHisChildren } = require('./helpers/process');
-const tp = require('./helpers/test-phases');
-const fx = require('./helpers/fixtures');
+const {
+  killSpawnProcessAndHisChildren,
+} = require('../../../test-helpers/process');
+const tp = require('../../../test-helpers/test-phases');
+const fx = require('../../../test-helpers/fixtures');
 const {
   insideTeamCity,
   teamCityArtifactVersion,
   noArtifactVersion,
-} = require('./helpers/env-variables');
-const config = require('../config/webpack.config.common');
+} = require('../../../test-helpers/env-variables');
+const { createCommonWebpackConfig } = require('../config/webpack.config');
+
+const config = createCommonWebpackConfig({ isDebug: true });
 
 describe('Webpack basic configs', () => {
   let res, test;
@@ -119,16 +123,16 @@ describe('Webpack basic configs', () => {
     });
 
     describe('public path', () => {
-      const ARTIFACT_ID = 'app-id';
       const ARTIFACT_VERSION = '1.2.3-SNAPSHOT';
 
-      it('should construct the public path according to ARTIFACT_ID and ARTIFACT_VERSION environment variable', () => {
+      it('should construct the public path according to pom.xml "artifactId" and ARTIFACT_VERSION environment variable', () => {
         test
           .setup({
             'src/client.js': `console.log('test');`,
+            'pom.xml': fx.pom(),
           })
           .execute('build', [], {
-            ARTIFACT_ID,
+            ...insideTeamCity,
             ARTIFACT_VERSION,
           });
 
@@ -137,13 +141,12 @@ describe('Webpack basic configs', () => {
         );
       });
 
-      it('should use "/" for public case when one of the envrinoment variables is missing (local dev environment)', () => {
+      it('should use "/" for default public path', () => {
         test
           .setup({
             'src/client.js': `console.log('test');`,
           })
           .execute('build', [], {
-            ARTIFACT_ID: '',
             ARTIFACT_VERSION: '',
           });
 
@@ -152,9 +155,20 @@ describe('Webpack basic configs', () => {
         );
       });
 
+      it('should use local dev-server url for public path on local dev environment', () => {
+        test.spawn('start');
+
+        return fetchClientBundle({ port: 3200, file: 'app.bundle.js' }).then(
+          bundle =>
+            expect(bundle).to.contain(
+              '__webpack_require__.p = "http://localhost:3200/"',
+            ),
+        );
+      });
+
       // we'll need to uncomment the strategy from `webpack.config.client.js` before we can unskip this test
       // eslint-disable-next-line
-      it.skip('should construct the publich path according to the package name and version when "unpkg" set to true on package.json', () => {
+      it.skip('should construct the public path according to the package name and version when "unpkg" set to true on package.json', () => {
         test
           .setup({
             'src/client.js': `console.log('test');`,
@@ -165,7 +179,7 @@ describe('Webpack basic configs', () => {
             }),
           })
           .execute('build', [], {
-            ARTIFACT_ID,
+            ...insideTeamCity,
             ARTIFACT_VERSION,
           });
 
@@ -196,6 +210,23 @@ describe('Webpack basic configs', () => {
           'module.exports = __webpack_require__.p + "image.jpg?',
         );
       });
+    });
+  });
+
+  describe('TPA style plugin', () => {
+    it('Should apply tpa style plugin', () => {
+      test
+        .setup({
+          'src/client.js': `require('./style.css')`,
+          'src/style.css': `.foo{color: "color(color-1)"; background: red;}`,
+          'package.json': fx.packageJson({
+            enhancedTpaStyle: true,
+          }),
+        })
+        .execute('build');
+
+      const css = test.content('dist/statics/app.css');
+      expect(css).not.to.contain('"color(color-1)"');
     });
   });
 
@@ -237,7 +268,7 @@ describe('Webpack basic configs', () => {
   });
 
   describe('when multiple versions of the same package exist in a build', () => {
-    const warningOutput = 'WARNING in duplicate-package-checker';
+    const warningOutput = 'WARNING in shared-dep';
     let child;
 
     afterEach(() => killSpawnProcessAndHisChildren(child));
@@ -311,17 +342,6 @@ describe('Webpack basic configs', () => {
         bundle => expect(bundle).to.not.contain('CONCATENATED MODULE'),
       );
     });
-
-    function fetchClientBundle({
-      backoff = 100,
-      max = 10,
-      port = fx.defaultServerPort(),
-      file = '',
-    } = {}) {
-      return retryPromise({ backoff, max }, () =>
-        fetch(`http://localhost:${port}/${file}`).then(res => res.text()),
-      );
-    }
   });
 
   describe('Performance budget', () => {
@@ -409,3 +429,14 @@ describe('Webpack basic configs', () => {
     });
   });
 });
+
+function fetchClientBundle({
+  backoff = 100,
+  max = 10,
+  port = fx.defaultServerPort(),
+  file = '',
+} = {}) {
+  return retryPromise({ backoff, max }, () =>
+    fetch(`http://localhost:${port}/${file}`).then(res => res.text()),
+  );
+}

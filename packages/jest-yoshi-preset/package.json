@@ -1,7 +1,6 @@
 {
   "name": "jest-yoshi-preset",
-  "version": "3.4.3",
-  "private": true,
+  "version": "3.13.1",
   "description": "jest configuration for a yoshi fullstack project",
   "main": "index.js",
   "keywords": [
@@ -14,19 +13,22 @@
   "peerDependencies": {
     "jest": "^23.0.0",
     "stylable": "^5.3.5",
-    "stylable-integration": "^6.1.1"
+    "stylable-integration": "^6.1.1",
+    "yoshi": "^3.6.0"
   },
   "dependencies": {
     "babel-jest": "^23.2.0",
+    "globby": "^8.0.1",
     "identity-obj-proxy": "^3.0.0",
-    "jest-environment-yoshi-bootstrap": "^3.1.0",
-    "jest-environment-yoshi-puppeteer": "^3.4.3",
+    "jest-environment-yoshi-bootstrap": "^3.13.1",
+    "jest-environment-yoshi-puppeteer": "^3.13.1",
     "ts-jest": "^23.0.1"
   },
   "devDependencies": {
     "stylable": "^5.3.5",
     "stylable-integration": "^6.1.1",
-    "typescript": "~2.9.0"
+    "typescript": "~2.9.0",
+    "yoshi": "^3.13.1"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

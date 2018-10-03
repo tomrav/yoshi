@@ -1,8 +1,8 @@
-const tp = require('./helpers/test-phases');
-const fx = require('./helpers/fixtures');
+const tp = require('../../../test-helpers/test-phases');
+const fx = require('../../../test-helpers/fixtures');
 const expect = require('chai').expect;
 const _ = require('lodash');
-const getMockedCI = require('./helpers/get-mocked-ci');
+const getMockedCI = require('../../../test-helpers/get-mocked-ci');
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -340,6 +340,7 @@ describe('Loaders', () => {
             import './some.haml';
             import './some.md';
             import './getData1.graphql';
+            import 'my-unprocessed-module/getDataExternal1.graphql';
             import './getData2.gql';
             let aServerFunction = 1;
             declare var angular: any; angular.module('fakeModule', []).config(function($typescript){});`,
@@ -349,13 +350,16 @@ describe('Loaders', () => {
             'src/some.md': '### title',
             'src/some.css': '.a {color: green;}',
             'src/getData1.graphql': 'query GetData1 { id, name }',
+            'node_modules/my-unprocessed-module/getDataExternal1.graphql':
+              'query GetDataExternal1 { id, name }',
             'src/getData2.gql': 'query GetData2 { id, name }',
             'src/foo.css': '.foo-rule { color: blue }',
             'package.json': `{
             "name": "b",
             "yoshi": {
               "entry": "./app.ts",
-              "separateCss": false
+              "separateCss": false,
+              "externalUnprocessedModules": ["my-unprocessed-module"]
             },
             "peerDependencies": {
               "angular": "^1.5.0"
@@ -448,6 +452,9 @@ describe('Loaders', () => {
 
         expect(content).to.contain('{"kind":"Name","value":"GetData1"}');
         expect(content).to.contain('{"kind":"Name","value":"GetData2"}');
+        expect(content).to.contain(
+          '{"kind":"Name","value":"GetDataExternal1"}',
+        );
       });
     });
   });

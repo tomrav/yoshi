@@ -1,10 +1,10 @@
 const path = require('path');
 const execa = require('execa');
 const expect = require('chai').expect;
-const tp = require('./helpers/test-phases');
-const fx = require('./helpers/fixtures');
-const hooks = require('./helpers/hooks');
-const { insideTeamCity } = require('./helpers/env-variables');
+const tp = require('../../../test-helpers/test-phases');
+const fx = require('../../../test-helpers/fixtures');
+const hooks = require('../../../test-helpers/hooks');
+const { insideTeamCity } = require('../../../test-helpers/env-variables');
 const retryPromise = require('retry-promise').default;
 const fetch = require('node-fetch');
 const { localIdentName } = require('../src/constants');
@@ -15,6 +15,7 @@ const generateCssModulesPattern = ({ name, path, short }) => {
   const generate = genericNames(pattern, { hashPrefix: 'a' });
   return generate(name, path);
 };
+
 const $inject = 'something.$inject = ["$http"];';
 
 describe('Aggregator: Build', () => {
@@ -282,11 +283,6 @@ describe('Aggregator: Build', () => {
         expect(test.content('dist/statics/second.css')).to.not.contain(
           '{\n  color: red;\n}',
         );
-      });
-
-      it('should generate stats files', () => {
-        expect(test.list('target')).to.contain('webpack-stats.json');
-        expect(test.list('target')).to.contain('webpack-stats.min.json');
       });
 
       it('should ignore locale modules from within moment', () => {
@@ -810,30 +806,81 @@ describe('Aggregator: Build', () => {
     });
   });
 
+  describe('build project with --stats flag', () => {
+    before(() => {
+      test = tp.create();
+      test
+        .setup({
+          'src/client.js': '',
+          'package.json': fx.packageJson(),
+        })
+        .execute('build', ['--stats']);
+    });
+
+    it('should generate stats files', () => {
+      expect(test.list('dist')).to.contain('webpack-stats.json');
+    });
+  });
+
+  describe('build project with --analyze flag', () => {
+    const analyzerServerPort = '8888';
+    const analyzerContentPart =
+      'window.chartData = [{"label":"app.bundle.min.js"';
+
+    before(() => {
+      test = tp.create();
+      test
+        .setup({
+          'src/client.js': '',
+          'package.json': fx.packageJson(),
+        })
+        .spawn('build', ['--analyze']);
+    });
+
+    it('should serve webpack-bundle-analyzer server', () => {
+      return checkServerIsServing({ port: analyzerServerPort }).then(content =>
+        expect(content).to.contain(analyzerContentPart),
+      );
+    });
+  });
+
+  // Currently skipping due to https://github.com/wix/yoshi/issues/595
+  // Previous `--analyze` test is opening a process with 8888 which is not
+  // killed, making `checkServerIsServing()` resolve too early
+  describe.skip('build project with --analyze and --stats flags', () => {
+    const analyzerServerPort = '8888';
+    const analyzerContentPart =
+      'window.chartData = [{"label":"app.bundle.min.js"';
+
+    before(() => {
+      test = tp.create();
+      test
+        .setup({
+          'src/client.js': '',
+          'package.json': fx.packageJson(),
+        })
+        .spawn('build', ['--analyze', '--stats']);
+    });
+
+    it('should serve webpack-bundle-analyzer server', () => {
+      return checkServerIsServing({ port: analyzerServerPort }).then(content =>
+        expect(content).to.contain(analyzerContentPart),
+      );
+    });
+
+    it('should generate stats files', () => {
+      return checkServerIsServing({ port: analyzerServerPort }).then(() =>
+        expect(test.list('dist')).to.contain('webpack-stats.json'),
+      );
+    });
+  });
+
   describe('build projects with individual cases', () => {
     beforeEach(() => {
       test = tp.create();
     });
     afterEach(() => {
       test.teardown();
-    });
-
-    describe('build project with --analyze flag', () => {
-      it('should serve webpack-bundle-analyzer server', () => {
-        const analyzerServerPort = '8888';
-        const analyzerContentPart =
-          'window.chartData = [{"label":"app.bundle.min.js"';
-        test
-          .setup({
-            'src/client.js': '',
-            'package.json': fx.packageJson(),
-          })
-          .spawn('build', ['--analyze']);
-
-        return checkServerIsServing({ port: analyzerServerPort }).then(
-          content => expect(content).to.contain(analyzerContentPart),
-        );
-      });
     });
 
     describe('build project w/o individual transpilation', () => {
@@ -992,6 +1039,28 @@ describe('Aggregator: Build', () => {
       });
     });
 
+    describe('jsonpFunction', () => {
+      it('should use custom jsonpFunction name according to the project name', () => {
+        const res = test
+          .setup({
+            'src/client.js': "import('./foo')",
+            'src/foo.js': "console.log('bar')",
+            'package.json': JSON.stringify({
+              name: 'my-project',
+              babel: {
+                presets: [require.resolve('babel-preset-yoshi')],
+              },
+            }),
+          })
+          .execute('build');
+
+        expect(res.code).to.equal(0);
+        expect(test.content('dist/statics/app.bundle.min.js')).to.contain(
+          'webpackJsonp_my_project',
+        );
+      });
+    });
+
     describe('build project with typescript files that use namespaces', () => {
       describe('environment variable DISABLE_TS_THREAD_OPTIMIZATION=true', () => {
         it('should add the namespace prefix to referred usages', () => {
@@ -1013,6 +1082,33 @@ describe('Aggregator: Build', () => {
             'SomeClass.prototype.someFunc = function () { return someNamespace.someEnum.a; };',
           );
         });
+      });
+    });
+
+    describe('build project with 2 entry points which are bundled in UMD modules', () => {
+      it('should be anonymous AMD modules if config has {umdNamedDefine: false}', () => {
+        test
+          .setup({
+            'package.json': fx.packageJson({
+              umdNamedDefine: false,
+              exports: '[name]',
+              entry: {
+                a: './entryA.js',
+                b: './entryB.js',
+              },
+              externals: ['dep-for-a-module', 'dep-for-b-module'],
+            }),
+            'src/entryA.js': `const dependency = require('dep-for-a-module'); module.exports = 'A'`,
+            'src/entryB.js': `const dependency = require('dep-for-b-module'); module.exports = 'B'`,
+          })
+          .execute('build', []);
+
+        expect(test.content('dist/statics/a.bundle.js')).contain(
+          `define(["dep-for-a-module"], `,
+        );
+        expect(test.content('dist/statics/b.bundle.js')).contain(
+          `define(["dep-for-b-module"], `,
+        );
       });
     });
   });
