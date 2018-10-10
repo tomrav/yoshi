@@ -16,6 +16,7 @@
   "dependencies": {
     "@stylable/cli": "^1.0.12",
     "@stylable/core": "^0.1.7",
+    "@stylable/jest": "^0.1.11",
     "@stylable/node": "^0.1.8",
     "@stylable/webpack-plugin": "^0.1.7",
     "@wix/depkeeper-preset-yoshi": "^1.0.0",
