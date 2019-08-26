@@ -3,6 +3,7 @@
 const path = require('path');
 const ld = require('lodash');
 const { wixCssModulesRequireHook } = require('yoshi-runtime');
+const { attachHook } = require('@stylable/node');
 const {
   inTeamCity,
   exists,
@@ -64,6 +65,7 @@ const merged = ld.mergeWith(
             includePaths: ['node_modules', 'node_modules/compass-mixins/lib'],
           }).css,
       });
+      attachHook(); // @stylable/node will fallback to the previous hook for non ".st.css" files
 
       if (shouldDeployToCDN()) {
         startRewriteForwardProxy({
